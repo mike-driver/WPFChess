@@ -1,20 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Text.RegularExpressions;
+
 using WPFChess.ValidationsAndProcesses;
 
 namespace WPFChess
@@ -157,6 +145,9 @@ namespace WPFChess
         //4 chars
         public bool ValidateMove(GameState gs)
         {
+            if (!IsItYourMove())
+                return false;
+
             // it is invalid if the source location of the move does not have a piece to move
             if (!IsPieceAtSourceLocation(gs.array))
                 return false;
@@ -175,7 +166,7 @@ namespace WPFChess
         public bool IsPieceMovingCorrectly(GameState gs)
         {
             bool result = false;
-            var whatPiece = WhatPieceIsHere(gs.array[0], gs.array[1]);
+            var whatPiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
             bool pieceAtDst = IsPieceAtDestinationLocation(gs.array);
             PieceMoveValidations pmv = new PieceMoveValidations();
 
@@ -239,6 +230,19 @@ namespace WPFChess
             return result;
         }
 
+        public bool IsItYourMove()
+        {
+            var sourcePiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
+            if ((sourcePiece.Player == Player.White && gs.MM == "WHITE") || (sourcePiece.Player == Player.Black && gs.MM == "BLACK"))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public bool IsPieceAtSourceLocation(int[] array)
         {
             if (IsPieceAtThisLocation(array[0], array[1]))
@@ -259,8 +263,8 @@ namespace WPFChess
 
         public bool IsPieceAtSourceDestinationLocationOppositeColour(GameState gs)
         {
-            var sourcePiece = WhatPieceIsHere(gs.array[0], gs.array[1]);
-            var destinationPiece = WhatPieceIsHere(gs.array[2], gs.array[3]);
+            var sourcePiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
+            var destinationPiece = Utility.WhatPieceIsHere(this, gs.array[2], gs.array[3]);
 
             if (sourcePiece.Player != destinationPiece.Player)
             {
@@ -272,7 +276,7 @@ namespace WPFChess
 
         public bool IsPieceAtThisLocation(int x, int y)
         {
-            var whatPiece = WhatPieceIsHere(x, y);
+            var whatPiece = Utility.WhatPieceIsHere(this, x, y);
             if (whatPiece != null)
             {
                 return true;
@@ -283,10 +287,10 @@ namespace WPFChess
         public void MovePiece(int xsrc, int ysrc, int xdst, int ydst)
         {
             //get the piece to move
-            var pieceToMove = WhatPieceIsHere(xsrc, ysrc);
+            var pieceToMove = Utility.WhatPieceIsHere(this, xsrc, ysrc);
 
             //take the piece if any in destination and add it to collection of pieces taken
-            var pieceToTake = WhatPieceIsHere(xdst, ydst);  //get the piece to take if any
+            var pieceToTake = Utility.WhatPieceIsHere(this, xdst, ydst);  //get the piece to take if any
             if (pieceToTake != null)                        //if there is a piece here take it
             {
                 this.Pieces.Remove(pieceToTake);            //remove the piece from board
@@ -304,13 +308,6 @@ namespace WPFChess
             this.Pieces.Remove(pieceToMove); //remove the piece
         }
 
-        public ChessPiece WhatPieceIsHere(int xRank, int yFile)
-        {
-            var pieceToMove = this.Pieces.Where(x => x.Pos.X == xRank && x.Pos.Y == yFile).ToList();  //return the piece
-
-            return pieceToMove.FirstOrDefault();
-        }
-
         //test method
         //test method
         public void MakeSomeMoves()
@@ -320,7 +317,7 @@ namespace WPFChess
             MovePiece(1, 7, 2, 5);  //white knight
             MovePiece(1, 0, 2, 2);  //black knight
             MovePiece(4, 4, 2, 2);  //nothing
-            _ = WhatPieceIsHere(1, 1);
+            _ = Utility.WhatPieceIsHere(this, 1, 1);
         }
     }
 }
