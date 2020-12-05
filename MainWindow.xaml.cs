@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
 
 using WPFChess.ValidationsAndProcesses;
 
@@ -23,6 +24,7 @@ namespace WPFChess
         public MainWindow()
         {
             InitializeComponent();
+            InputBox.Focus();
 
             this.piecesTaken = new Collection<ChessPiece>();
 
@@ -72,10 +74,89 @@ namespace WPFChess
             // ]
         }
 
+        private void OnKeyDownHandler(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                MoveList.Content = InputBox.Text;
+                gs.move = InputBox.Text;
+
+                InputBox.Clear();
+                InputBox.Focus();
+
+                MoveList.Content = moveList;
+                Valid.Content = "";
+
+                switch (gs.move.Length)
+                {
+                    case 1:
+                        if (Validations.ProcessCommand(gs.move))
+                        {
+                            Valid.Content = "Valid command : " + gs.move;
+                        }
+                        else
+                        {
+                            Valid.Content = "Invalid command : " + gs.move;
+                        }
+                        break;
+
+                    case 2:
+                        if (MoveValidations.ProcessCastle(gs.move))
+                        {
+                            Valid.Content = "Valid castle on king side: " + gs.move;
+                        }
+                        else
+                        {
+                            Valid.Content = "Invalid move : " + gs.move;
+                        }
+                        break;
+
+                    case 3:
+                        if (MoveValidations.ProcessCastle(gs.move))
+                        {
+                            Valid.Content = "Valid castle on queen side: " + gs.move;
+                        }
+                        else
+                        {
+                            Valid.Content = "Invalid move : " + gs.move;
+                        }
+                        break;
+
+                    case 4:
+                        if (MoveValidations.GeneralMoveFormatOK(gs.move))
+                        {
+                            gs.array = MoveProcess.TranslateMove(gs.move);
+                            if (ValidateMove(gs))
+                            {
+                                MovePiece(gs.array[0], gs.array[1], gs.array[2], gs.array[3]);
+                                moveCnt++;
+                                WhitesMove = (moveCnt % 2 == 0);
+                                moveList.Append(gs.MM + "-" + gs.move + " ");
+                                gs.MM = WhitesMove ? "WHITE" : "BLACK";
+                                WhoseMove.Content = gs.MM + " to move ...";
+                                Valid.Content = "Valid move : " + gs.move;
+                            }
+                            else
+                            {
+                                Valid.Content = "Invalid move : " + gs.move;
+                            }
+                        }
+                        else
+                        {
+                            Valid.Content = "Invalid move : " + gs.move;
+                        }
+                        break;
+                }
+            }
+        }
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             MoveList.Content = InputBox.Text;
             gs.move = InputBox.Text;
+
+            InputBox.Clear();
+            InputBox.Focus();
 
             MoveList.Content = moveList;
             Valid.Content = "";

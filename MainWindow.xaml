@@ -185,10 +185,10 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-            <Label Content="Enter your move" Margin="2" />
+            <Label Content="  a  b  c  d  e  f  g  h  " Margin="5" />
             <Label Grid.Row="1" Name="WhoseMove" />
-            <TextBox Grid.Row="2" Name="InputBox" Margin="2" Text="" />
-            <Button Grid.Row="3" Content="Click here to make the move" Margin="5" Click="Button_Click" />
+            <TextBox Grid.Row="2" Name="InputBox" Margin="5" Text="" KeyDown="OnKeyDownHandler" />
+            <Button Grid.Row="3" Content="ENTER to move" Margin="5" Click="Button_Click" />
             <Label Grid.Row="4" Name="Valid" Margin="2" />
             <Label Grid.Row="5" Name="MoveList" Margin="2" />
         </Grid>
