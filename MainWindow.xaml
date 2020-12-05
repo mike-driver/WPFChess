@@ -9,7 +9,7 @@
         <DrawingBrush x:Key="Chessboard" Stretch="None" TileMode="Tile" Viewport="0,0,2,2" ViewportUnits="Absolute">
             <DrawingBrush.Drawing>
                 <DrawingGroup>
-                    <GeometryDrawing Brush="Tan">
+                    <GeometryDrawing Brush="Pink">
                         <GeometryDrawing.Geometry>
                             <RectangleGeometry Rect="0,0,2,2" />
                         </GeometryDrawing.Geometry>
@@ -146,7 +146,7 @@
 
         <Border BorderThickness="25" BorderBrush="Black">
             <TextBlock Name="ChessGame" TextWrapping="Wrap" FontSize="16" TextAlignment="Center">
-      <Bold> <Italic>... WPF ChessGame ...</Italic> </Bold>
+              <Bold> <Italic>... WPF ChessGame ...</Italic> </Bold>
             </TextBlock>
         </Border>
 
@@ -154,7 +154,7 @@
             <ItemsControl Name="ChessBoard">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Canvas Width="8" Height="8" Background="{StaticResource Chessboard}" />
+                        <Canvas Width="9" Height="9" Background="{StaticResource Chessboard}" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
 
