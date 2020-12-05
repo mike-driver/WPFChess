@@ -8,6 +8,7 @@ namespace WPFChess
         {
             if (move == "q" || move == "f" || move == "r" || move == "s")
             {
+                Environment.Exit(0);
                 return true;
             }
             else
