@@ -1,0 +1,8 @@
+﻿The grid and pieces and data binding came from here:
+https://stackoverflow.com/questions/20560519/wpf-controls-needed-to-build-chess-application/20563181
+
+see this:
+http://www.ppl-pilot.com/files/ChessDemo.zip
+
+see:
+http://www.ppl-pilot.com/
