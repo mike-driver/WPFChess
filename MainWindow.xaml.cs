@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
+using WPFChess.ValidationsAndProcesses;
 
 namespace WPFChess
 {
@@ -105,7 +106,7 @@ namespace WPFChess
                     break;
 
                 case 2:
-                    if (ProcessCastle(gs.move))
+                    if (MoveValidations.ProcessCastle(gs.move))
                     {
                         Valid.Content = "Valid castle on king side: " + gs.move;
                     }
@@ -116,7 +117,7 @@ namespace WPFChess
                     break;
 
                 case 3:
-                    if (ProcessCastle(gs.move))
+                    if (MoveValidations.ProcessCastle(gs.move))
                     {
                         Valid.Content = "Valid castle on queen side: " + gs.move;
                     }
@@ -127,9 +128,9 @@ namespace WPFChess
                     break;
 
                 case 4:
-                    if (GeneralMoveFormatOK(gs.move))
+                    if (MoveValidations.GeneralMoveFormatOK(gs.move))
                     {
-                        gs.array = TranslateMove(gs.move);
+                        gs.array = MoveProcess.TranslateMove(gs.move);
                         if (ValidateMove(gs))
                         {
                             MovePiece(gs.array[0], gs.array[1], gs.array[2], gs.array[3]);
@@ -150,19 +151,6 @@ namespace WPFChess
                         Valid.Content = "Invalid move : " + gs.move;
                     }
                     break;
-            }
-        }
-
-        //2 or 3 char
-        public bool ProcessCastle(string move)
-        {
-            if (move == "00" || move == "000")
-            {
-                return true;
-            }
-            else
-            {
-                return false;
             }
         }
 
@@ -290,51 +278,6 @@ namespace WPFChess
                 return true;
             }
             return false;
-        }
-
-        public bool GeneralMoveFormatOK(string move)
-        {
-            const string MoveRegExExpression = "([a-h]{1}[1-8]{1}[a-h]{1}[1-8]{1})";
-
-            if (!Regex.Match(move, MoveRegExExpression).Success)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public int[] TranslateMove(string movestr)
-        {
-            int[] array = new int[4];
-
-            var src = movestr.Substring(0, 2);
-            var dst = movestr.Substring(2, 2);
-
-            array[0] = GetFile(src);
-            array[1] = GetRank(src);
-            array[2] = GetFile(dst);
-            array[3] = GetRank(dst);
-
-            return array;
-        }
-
-        private static int GetFile(string pos)
-        {
-            //'a' ... 'h' ----->  1 ..... 8
-            // subtract 1 for 0 index
-            char letter = Convert.ToChar(pos.Substring(0, 1));
-            int F = (int)letter - 96 - 1;
-            return F;
-        }
-
-        private static int GetRank(string pos)
-        {
-            // 1 ..... 8  -----> 0 .... 7  .... because the board is the other way around in the array
-            // and we subtract 1 for the 0 index start
-            int swap = 8 + 1 - (int.Parse(pos.Substring(1, 1)));
-            int R = swap - 1;
-            return R;
         }
 
         public void MovePiece(int xsrc, int ysrc, int xdst, int ydst)
