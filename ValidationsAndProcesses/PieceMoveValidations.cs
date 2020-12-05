@@ -2,18 +2,31 @@
 using System.Collections.Generic;
 using System.Text;
 
+using WPFChess.ValidationsAndProcesses;
+
 namespace WPFChess
 {
     internal class PieceMoveValidations
     {
-        public bool PieceMovingLikeABlackPawn(bool pieceAtDst, int xsrc, int ysrc, int xdst, int ydst)
+        public bool PieceMovingLikeABlackPawn(WPFChess.MainWindow wmw, bool pieceAtDst, int xsrc, int ysrc, int xdst, int ydst)
         {
             //on any move can move forward 1 square if destination is free
             if ((ysrc - ydst == -1) && (!pieceAtDst) && (xsrc - xdst == 0))
                 return true;
-            //on first move can move forward 2 squares if destination is free
-            if ((ysrc == 1) && (ysrc - ydst == -2) && (!pieceAtDst) && (xsrc - xdst == 0))
-                return true;
+            //on first move can move forward 2 squares if destination is free and square is empty in between
+            if ((ysrc == 1) && (ysrc - ydst == -2) && (xsrc - xdst == 0))
+            {
+                var pieceHere = Utility.WhatPieceIsHere(wmw, xsrc, ysrc + 1);
+                if (!pieceAtDst && pieceHere == null)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
             //can move forward 1 square diagonally if taking a piece
             if ((((ysrc - ydst) == -1)) && (pieceAtDst) && (Math.Abs(xsrc - xdst) == 1))
                 return true;
@@ -23,14 +36,25 @@ namespace WPFChess
             return false;
         }
 
-        public bool PieceMovingLikeAWhitePawn(bool pieceAtDst, int xsrc, int ysrc, int xdst, int ydst)
+        public bool PieceMovingLikeAWhitePawn(WPFChess.MainWindow wmw, bool pieceAtDst, int xsrc, int ysrc, int xdst, int ydst)
         {
             //on any move can move forward 1 square if destination is free
             if ((ysrc - ydst == 1) && (!pieceAtDst) && (xsrc - xdst == 0))
                 return true;
-            //on first move can move forward 2 squares if destination is free
-            if ((ysrc == 6) && (ysrc - ydst == 2) && (!pieceAtDst) && (xsrc - xdst == 0))
-                return true;
+            //on first move can move forward 2 squares if destination is free and square is empty in between
+            if ((ysrc == 6) && (ysrc - ydst == 2) && (xsrc - xdst == 0))
+            {
+                var pieceHere = Utility.WhatPieceIsHere(wmw, xsrc, ysrc - 1);
+                if (!pieceAtDst && pieceHere == null)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
             //can move forward 1 square diagonally if taking a piece
             if ((((ysrc - ydst) == 1)) && (pieceAtDst) && (Math.Abs(xsrc - xdst) == 1))
                 return true;

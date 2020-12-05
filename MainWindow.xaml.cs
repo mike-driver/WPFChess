@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -78,79 +79,16 @@ namespace WPFChess
         {
             if (e.Key == Key.Return)
             {
-                MoveList.Content = InputBox.Text;
-                gs.move = InputBox.Text;
-
-                InputBox.Clear();
-                InputBox.Focus();
-
-                MoveList.Content = moveList;
-                Valid.Content = "";
-
-                switch (gs.move.Length)
-                {
-                    case 1:
-                        if (Validations.ProcessCommand(gs.move))
-                        {
-                            Valid.Content = "Valid command : " + gs.move;
-                        }
-                        else
-                        {
-                            Valid.Content = "Invalid command : " + gs.move;
-                        }
-                        break;
-
-                    case 2:
-                        if (MoveValidations.ProcessCastle(gs.move))
-                        {
-                            Valid.Content = "Valid castle on king side: " + gs.move;
-                        }
-                        else
-                        {
-                            Valid.Content = "Invalid move : " + gs.move;
-                        }
-                        break;
-
-                    case 3:
-                        if (MoveValidations.ProcessCastle(gs.move))
-                        {
-                            Valid.Content = "Valid castle on queen side: " + gs.move;
-                        }
-                        else
-                        {
-                            Valid.Content = "Invalid move : " + gs.move;
-                        }
-                        break;
-
-                    case 4:
-                        if (MoveValidations.GeneralMoveFormatOK(gs.move))
-                        {
-                            gs.array = MoveProcess.TranslateMove(gs.move);
-                            if (ValidateMove(gs))
-                            {
-                                MovePiece(gs.array[0], gs.array[1], gs.array[2], gs.array[3]);
-                                moveCnt++;
-                                WhitesMove = (moveCnt % 2 == 0);
-                                moveList.Append(gs.MM + "-" + gs.move + " ");
-                                gs.MM = WhitesMove ? "WHITE" : "BLACK";
-                                WhoseMove.Content = gs.MM + " to move ...";
-                                Valid.Content = "Valid move : " + gs.move;
-                            }
-                            else
-                            {
-                                Valid.Content = "Invalid move : " + gs.move;
-                            }
-                        }
-                        else
-                        {
-                            Valid.Content = "Invalid move : " + gs.move;
-                        }
-                        break;
-                }
+                MakeTheMove();
             }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            MakeTheMove();
+        }
+
+        private void MakeTheMove()
         {
             MoveList.Content = InputBox.Text;
             gs.move = InputBox.Text;
@@ -226,16 +164,20 @@ namespace WPFChess
         //4 chars
         public bool ValidateMove(GameState gs)
         {
-            if (!IsItYourMove())
+            // it is invalid if the source location of the move does not have a piece to move
+
+            if (!IsPieceAtSourceLocation(gs.array))
                 return false;
 
-            // it is invalid if the source location of the move does not have a piece to move
-            if (!IsPieceAtSourceLocation(gs.array))
+            if (!IsItYourMove())
                 return false;
 
             // it is invalid if the destination of the move has a piece that is not of the opposite colour
             if ((IsPieceAtDestinationLocation(gs.array)) && (!IsPieceAtSourceDestinationLocationOppositeColour(gs)))
                 return false;
+
+            //if (!IsClearPath(gs))
+            //    return false;
 
             if (!IsPieceMovingCorrectly(gs))
                 return false;
@@ -244,6 +186,25 @@ namespace WPFChess
         }
 
         //////////////////
+        public bool IsClearPath(GameState gs)
+        {
+            bool result = false;
+            var whatPiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
+
+            //any piece moving 1 square doesn't need this check
+            if ((Math.Abs(gs.array[0] - gs.array[2]) <= 1) && (Math.Abs(gs.array[1] - gs.array[3]) <= 1))
+            {
+                result = true;
+            }
+            //knights dont need this check as they jump over
+            if (whatPiece.Type == PieceType.Knight)
+            {
+                result = true;
+            }
+
+            return result;
+        }
+
         public bool IsPieceMovingCorrectly(GameState gs)
         {
             bool result = false;
@@ -256,14 +217,14 @@ namespace WPFChess
                 case PieceType.Pawn:
                     if (whatPiece.Player == Player.White)
                     {
-                        if (pmv.PieceMovingLikeAWhitePawn(pieceAtDst, gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
+                        if (pmv.PieceMovingLikeAWhitePawn(this, pieceAtDst, gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
                         {
                             result = true;
                         }
                     }
                     else
                     {
-                        if (pmv.PieceMovingLikeABlackPawn(pieceAtDst, gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
+                        if (pmv.PieceMovingLikeABlackPawn(this, pieceAtDst, gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
                         {
                             result = true;
                         }
