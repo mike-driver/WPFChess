@@ -69,8 +69,15 @@ namespace WPFChess
             // [ initial state
             gs = new GameState
             {
-                MM = "WHITE"
+                WM = "WHITE",
+                WKM = false,
+                BKM = false,
+                WRK = false,
+                WRQ = false,
+                BRK = false,
+                BRQ = false
             };
+
             WhoseMove.Content = "WHITE to move ...";
             // ]
         }
@@ -140,12 +147,13 @@ namespace WPFChess
                         gs.array = MoveProcess.TranslateMove(gs.move);
                         if (ValidateMove(gs))
                         {
+                            SetCastlingFlags(this, gs.array[0], gs.array[1]);
                             MovePiece(gs.array[0], gs.array[1], gs.array[2], gs.array[3]);
                             moveCnt++;
                             WhitesMove = (moveCnt % 2 == 0);
-                            moveList.Append(gs.MM + "-" + gs.move + " ");
-                            gs.MM = WhitesMove ? "WHITE" : "BLACK";
-                            WhoseMove.Content = gs.MM + " to move ...";
+                            moveList.Append(gs.WM + "-" + gs.move + " ");
+                            gs.WM = WhitesMove ? "WHITE" : "BLACK";
+                            WhoseMove.Content = gs.WM + " to move ...";
                             Valid.Content = "Valid move : " + gs.move;
                         }
                         else
@@ -161,15 +169,46 @@ namespace WPFChess
             }
         }
 
+        private void SetCastlingFlags(WPFChess.MainWindow wmw, int xFile, int yRank)
+        {
+            var piece = Utility.WhatPieceIsHere(wmw, xFile, yRank);
+            if (piece != null)
+            {
+                //white king has moved
+                if (piece.Player == Player.White && piece.Type == PieceType.King)
+                    gs.WKM = true;
+                //black king has moved
+                if (piece.Player == Player.Black && piece.Type == PieceType.King)
+                    gs.BKM = true;
+
+                //white rook king side moved
+                if (xFile == 7 && yRank == 7)
+                    gs.WRK = true;
+                //white rook queen side moved
+                if (xFile == 0 && yRank == 7)
+                    gs.WRQ = true;
+                //black rook king side moved
+                if (xFile == 7 && yRank == 0)
+                    gs.BRK = true;
+                //black rook queen side moved
+                if (xFile == 0 && yRank == 0)
+                    gs.BRQ = true;
+            }
+        }
+
         //4 chars
         public bool ValidateMove(GameState gs)
         {
-            // it is invalid if the source location of the move does not have a piece to move
+            //get the pieces at src and dst
+            var pieceAtSrc = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
+            var pieceAtDst = Utility.WhatPieceIsHere(this, gs.array[2], gs.array[3]);
 
-            if (!IsPieceAtSourceLocation(gs.array))
+            //check there is a piece to move from here
+            if (pieceAtSrc == null)
                 return false;
 
-            if (!IsItYourMove())
+            //check that it is the correct turn of move
+            if ((pieceAtSrc.Player == Player.White && gs.WM == "BLACK") || (pieceAtSrc.Player == Player.Black && gs.WM == "WHITE"))
                 return false;
 
             // it is invalid if the destination of the move has a piece that is not of the opposite colour
@@ -182,7 +221,15 @@ namespace WPFChess
             if (!IsPieceMovingCorrectly(gs))
                 return false;
 
+            if (IsItAValidCastleMove(gs))
+                return true;
+
             return true;
+        }
+
+        private bool IsItAValidCastleMove(GameState gs)
+        {
+            throw new NotImplementedException();
         }
 
         //////////////////
@@ -275,7 +322,7 @@ namespace WPFChess
         public bool IsItYourMove()
         {
             var sourcePiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
-            if ((sourcePiece.Player == Player.White && gs.MM == "WHITE") || (sourcePiece.Player == Player.Black && gs.MM == "BLACK"))
+            if ((sourcePiece.Player == Player.White && gs.WM == "WHITE") || (sourcePiece.Player == Player.Black && gs.WM == "BLACK"))
             {
                 return true;
             }
