@@ -6,6 +6,22 @@ namespace WPFChess.MainFlow
 {
     public partial class Utility
     {
+        public static GameState SetInitialGameState()
+        {
+            GameState gs = new GameState
+            {
+                WM = "WHITE",
+                WKM = false,
+                BKM = false,
+                WRK = false,
+                WRQ = false,
+                BRK = false,
+                BRQ = false
+            };
+
+            return gs;
+        }
+
         public static ChessPiece WhatPieceIsHere(WPFChess.MainWindow wmw, int xRank, int yFile)
         {
             var pieceToMove = wmw.Pieces.Where(x => x.Pos.X == xRank && x.Pos.Y == yFile).ToList();  //return the piece
@@ -23,7 +39,7 @@ namespace WPFChess.MainFlow
             if (pieceToTake != null)                        //if there is a piece here take it
             {
                 wmw.Pieces.Remove(pieceToTake);            //remove the piece from board
-                wmw.piecesTaken.Add(pieceToTake);          //add the piece to the list of taken pieces
+                wmw.PiecesTaken.Add(pieceToTake);          //add the piece to the list of taken pieces
             }
 
             //move the piece - add and remove from the observable location
@@ -37,7 +53,6 @@ namespace WPFChess.MainFlow
             wmw.Pieces.Remove(pieceToMove); //remove the piece
         }
 
-        //test method
         //test method
         public void MakeSomeMoves(WPFChess.MainWindow wmw)
         {

@@ -190,7 +190,7 @@
             <TextBox Grid.Row="2" Name="InputBox" Margin="5" Text="" KeyDown="OnKeyDownHandler" />
             <Button Grid.Row="3" Content="ENTER to move" Margin="5" Click="Button_Click" />
             <Label Grid.Row="4" Name="Valid" Margin="2" />
-            <Label Grid.Row="5" Name="MoveList" Margin="2" />
+            <Label Grid.Row="5" Name="MoveListLabel" Margin="2" />
         </Grid>
     </StackPanel>
 </Window>

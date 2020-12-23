@@ -17,19 +17,19 @@ namespace WPFChess
     public partial class MainWindow : Window
     {
         public ObservableCollection<ChessPiece> Pieces;
-        public StringBuilder moveList = new StringBuilder();
-        public Collection<ChessPiece> piecesTaken;
+        public StringBuilder MoveList = new StringBuilder();
+        public Collection<ChessPiece> PiecesTaken;
 
-        private int moveCnt = 0;
-        private bool whitesMove = true;
-        public GameState gs = new GameState();
+        private int MOVECOUNT = 0;
+        private bool WHITESMOVE = true;
+        public GameState GS = new GameState();
 
         public MainWindow()
         {
             InitializeComponent();
             InputBox.Focus();
 
-            this.piecesTaken = new Collection<ChessPiece>();
+            this.PiecesTaken = new Collection<ChessPiece>();
 
             this.Pieces = new ObservableCollection<ChessPiece>() {
                 new ChessPiece{Pos=new Point(0, 6), Type=PieceType.Pawn, Player=Player.White},
@@ -68,20 +68,9 @@ namespace WPFChess
 
             ChessBoard.ItemsSource = this.Pieces;
 
-            // [ initial state
-            gs = new GameState
-            {
-                WM = "WHITE",
-                WKM = false,
-                BKM = false,
-                WRK = false,
-                WRQ = false,
-                BRK = false,
-                BRQ = false
-            };
+            _ = Utility.SetInitialGameState();
 
             WhoseMove.Content = "WHITE to move ...";
-            // ]
         }
 
         private void OnKeyDownHandler(object sender, KeyEventArgs e)
@@ -99,14 +88,14 @@ namespace WPFChess
 
         private void ProcessMove()
         {
-            MoveList.Content = InputBox.Text;
-            gs.move = InputBox.Text;
+            MoveListLabel.Content = InputBox.Text;
+            GS.move = InputBox.Text;
 
-            if (gs.move.ToLower() == "s1")
+            if (GS.move.ToLower() == "s1")
             {
                 Utility.Setup1(this);
             }
-            if (gs.move.ToLower() == "s2")
+            if (GS.move.ToLower() == "s2")
             {
                 Utility.Setup2(this);
             }
@@ -114,65 +103,65 @@ namespace WPFChess
             InputBox.Clear();
             InputBox.Focus();
 
-            MoveList.Content = moveList;
+            MoveListLabel.Content = MoveList;
             Valid.Content = "";
 
-            switch (gs.move.Length)
+            switch (GS.move.Length)
             {
                 case 1:
-                    if (FlowControl.ProcessCommand(gs.move))
+                    if (FlowControl.ProcessCommand(GS.move))
                     {
-                        Valid.Content = "Valid command : " + gs.move;
+                        Valid.Content = "Valid command : " + GS.move;
                     }
                     else
                     {
-                        Valid.Content = "Invalid command : " + gs.move;
+                        Valid.Content = "Invalid command : " + GS.move;
                     }
                     break;
 
                 case 4:
-                    if (CheckMoveRegExpression.CheckMoveRegEx(gs.move))
+                    if (CheckMoveRegExpression.CheckMoveRegEx(GS.move))
                     {
-                        gs.array = ConvertMove.ToInternalArray(gs.move);
-                        if (GeneralValidations.ValidateMove(this, gs))
+                        GS.array = ConvertMove.ToInternalArray(GS.move);
+                        if (GeneralValidations.ValidateMove(this, GS))
                         {
-                            Utility.SetCastlingFlags(this, gs.array[0], gs.array[1], gs);
-                            Utility.MovePiece(this, gs.array[0], gs.array[1], gs.array[2], gs.array[3]);
-                            if (gs.WKCRS)
+                            Utility.SetCastlingFlags(this, GS.array[0], GS.array[1], GS);
+                            Utility.MovePiece(this, GS.array[0], GS.array[1], GS.array[2], GS.array[3]);
+                            if (GS.WKCRS)
                             {
                                 Utility.MovePiece(this, 7, 7, 5, 7); //move castle over to complete the castle move
-                                gs.WKCRS = false; //and reset the flag
+                                GS.WKCRS = false; //and reset the flag
                             }
-                            if (gs.WKCQS)
+                            if (GS.WKCQS)
                             {
                                 Utility.MovePiece(this, 0, 7, 3, 7); //move castle over to complete the castle move
-                                gs.WKCQS = false; //and reset the flag
+                                GS.WKCQS = false; //and reset the flag
                             }
-                            if (gs.BKCRS)
+                            if (GS.BKCRS)
                             {
                                 Utility.MovePiece(this, 7, 0, 5, 0); //move castle over to complete the castle move
-                                gs.BKCRS = false; //and reset the flag
+                                GS.BKCRS = false; //and reset the flag
                             }
-                            if (gs.BKCQS)
+                            if (GS.BKCQS)
                             {
                                 Utility.MovePiece(this, 0, 0, 3, 0); //move castle over to complete the castle move
-                                gs.BKCQS = false; //and reset the flag
+                                GS.BKCQS = false; //and reset the flag
                             }
-                            moveCnt++;
-                            whitesMove = (moveCnt % 2 == 0);
-                            moveList.Append(gs.WM + "-" + gs.move + " ");
-                            gs.WM = whitesMove ? "WHITE" : "BLACK";
-                            WhoseMove.Content = gs.WM + " to move ...";
-                            Valid.Content = "Valid move : " + gs.move;
+                            MOVECOUNT++;
+                            WHITESMOVE = (MOVECOUNT % 2 == 0);
+                            MoveList.Append(GS.WM + "-" + GS.move + " ");
+                            GS.WM = WHITESMOVE ? "WHITE" : "BLACK";
+                            WhoseMove.Content = GS.WM + " to move ...";
+                            Valid.Content = "Valid move : " + GS.move;
                         }
                         else
                         {
-                            Valid.Content = "Invalid move : " + gs.move;
+                            Valid.Content = "Invalid move : " + GS.move;
                         }
                     }
                     else
                     {
-                        Valid.Content = "Invalid move : " + gs.move;
+                        Valid.Content = "Invalid move : " + GS.move;
                     }
                     break;
             }
