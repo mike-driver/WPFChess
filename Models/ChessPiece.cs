@@ -1,6 +1,9 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 using GalaSoft.MvvmLight;
+
+using WPFChess.Models;
 
 namespace WPFChess
 {

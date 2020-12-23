@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-using WPFChess.ValidationsAndProcesses;
+using WPFChess.MainFlow;
 
-namespace WPFChess
+namespace WPFChess.Validations
 {
     internal class PieceMoveValidations
     {
@@ -103,12 +101,28 @@ namespace WPFChess
             return false;
         }
 
-        public bool PieceMovingLikeAKing(int xsrc, int ysrc, int xdst, int ydst)
+        public bool PieceMovingLikeAKing(GameState gs, int xsrc, int ysrc, int xdst, int ydst)
         {
             //kings move one square in any direction, so r and f can both change by 1 or one of them can change by 1
             //must allow for castling - 0 or 00 ... TO DO
             if ((Math.Abs(xsrc - xdst) <= 1) && (Math.Abs(ysrc - ydst) <= 1))
                 return true;
+            //is it castling
+            if (Math.Abs(xsrc - xdst) == 2)
+            {
+                if (xdst == 6 && ydst == 7)
+                    gs.WKCRS = true;
+                if (xdst == 6 && ydst == 0)
+                    gs.BKCRS = true;
+
+                if (xdst == 2 && ydst == 7)
+                    gs.WKCQS = true;
+                if (xdst == 2 && ydst == 0)
+                    gs.BKCQS = true;
+
+                return true;
+            }
+
             return false;
         }
     }

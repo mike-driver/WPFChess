@@ -1,8 +1,9 @@
 using System;
 
-namespace WPFChess
+namespace WPFChess.MainFlow
+
 {
-    public partial class Validations
+    public static class FlowControl
     {
         public static bool ProcessCommand(string move)
         {

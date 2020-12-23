@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
 
-using WPFChess.ValidationsAndProcesses;
+using WPFChess.ChessCore;
+using WPFChess.MainFlow;
+using WPFChess.Models;
+using WPFChess.Validations;
 
 namespace WPFChess
 {
@@ -19,7 +21,7 @@ namespace WPFChess
         public Collection<ChessPiece> piecesTaken;
 
         private int moveCnt = 0;
-        private bool WhitesMove = true;
+        private bool whitesMove = true;
         public GameState gs = new GameState();
 
         public MainWindow()
@@ -86,19 +88,28 @@ namespace WPFChess
         {
             if (e.Key == Key.Return)
             {
-                MakeTheMove();
+                ProcessMove();
             }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            MakeTheMove();
+            ProcessMove();
         }
 
-        private void MakeTheMove()
+        private void ProcessMove()
         {
             MoveList.Content = InputBox.Text;
             gs.move = InputBox.Text;
+
+            if (gs.move.ToLower() == "s1")
+            {
+                Utility.Setup1(this);
+            }
+            if (gs.move.ToLower() == "s2")
+            {
+                Utility.Setup2(this);
+            }
 
             InputBox.Clear();
             InputBox.Focus();
@@ -109,7 +120,7 @@ namespace WPFChess
             switch (gs.move.Length)
             {
                 case 1:
-                    if (Validations.ProcessCommand(gs.move))
+                    if (FlowControl.ProcessCommand(gs.move))
                     {
                         Valid.Content = "Valid command : " + gs.move;
                     }
@@ -119,40 +130,38 @@ namespace WPFChess
                     }
                     break;
 
-                case 2:
-                    if (MoveValidations.ProcessCastle(gs.move))
-                    {
-                        Valid.Content = "Valid castle on king side: " + gs.move;
-                    }
-                    else
-                    {
-                        Valid.Content = "Invalid move : " + gs.move;
-                    }
-                    break;
-
-                case 3:
-                    if (MoveValidations.ProcessCastle(gs.move))
-                    {
-                        Valid.Content = "Valid castle on queen side: " + gs.move;
-                    }
-                    else
-                    {
-                        Valid.Content = "Invalid move : " + gs.move;
-                    }
-                    break;
-
                 case 4:
-                    if (MoveValidations.GeneralMoveFormatOK(gs.move))
+                    if (CheckMoveRegExpression.CheckMoveRegEx(gs.move))
                     {
-                        gs.array = MoveProcess.TranslateMove(gs.move);
-                        if (ValidateMove(gs))
+                        gs.array = ConvertMove.ToInternalArray(gs.move);
+                        if (GeneralValidations.ValidateMove(this, gs))
                         {
-                            SetCastlingFlags(this, gs.array[0], gs.array[1]);
-                            MovePiece(gs.array[0], gs.array[1], gs.array[2], gs.array[3]);
+                            Utility.SetCastlingFlags(this, gs.array[0], gs.array[1], gs);
+                            Utility.MovePiece(this, gs.array[0], gs.array[1], gs.array[2], gs.array[3]);
+                            if (gs.WKCRS)
+                            {
+                                Utility.MovePiece(this, 7, 7, 5, 7); //move castle over to complete the castle move
+                                gs.WKCRS = false; //and reset the flag
+                            }
+                            if (gs.WKCQS)
+                            {
+                                Utility.MovePiece(this, 0, 7, 3, 7); //move castle over to complete the castle move
+                                gs.WKCQS = false; //and reset the flag
+                            }
+                            if (gs.BKCRS)
+                            {
+                                Utility.MovePiece(this, 7, 0, 5, 0); //move castle over to complete the castle move
+                                gs.BKCRS = false; //and reset the flag
+                            }
+                            if (gs.BKCQS)
+                            {
+                                Utility.MovePiece(this, 0, 0, 3, 0); //move castle over to complete the castle move
+                                gs.BKCQS = false; //and reset the flag
+                            }
                             moveCnt++;
-                            WhitesMove = (moveCnt % 2 == 0);
+                            whitesMove = (moveCnt % 2 == 0);
                             moveList.Append(gs.WM + "-" + gs.move + " ");
-                            gs.WM = WhitesMove ? "WHITE" : "BLACK";
+                            gs.WM = whitesMove ? "WHITE" : "BLACK";
                             WhoseMove.Content = gs.WM + " to move ...";
                             Valid.Content = "Valid move : " + gs.move;
                         }
@@ -167,246 +176,6 @@ namespace WPFChess
                     }
                     break;
             }
-        }
-
-        private void SetCastlingFlags(WPFChess.MainWindow wmw, int xFile, int yRank)
-        {
-            var piece = Utility.WhatPieceIsHere(wmw, xFile, yRank);
-            if (piece != null)
-            {
-                //white king has moved
-                if (piece.Player == Player.White && piece.Type == PieceType.King)
-                    gs.WKM = true;
-                //black king has moved
-                if (piece.Player == Player.Black && piece.Type == PieceType.King)
-                    gs.BKM = true;
-
-                //white rook king side moved
-                if (xFile == 7 && yRank == 7)
-                    gs.WRK = true;
-                //white rook queen side moved
-                if (xFile == 0 && yRank == 7)
-                    gs.WRQ = true;
-                //black rook king side moved
-                if (xFile == 7 && yRank == 0)
-                    gs.BRK = true;
-                //black rook queen side moved
-                if (xFile == 0 && yRank == 0)
-                    gs.BRQ = true;
-            }
-        }
-
-        //4 chars
-        public bool ValidateMove(GameState gs)
-        {
-            //get the pieces at src and dst
-            var pieceAtSrc = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
-            var pieceAtDst = Utility.WhatPieceIsHere(this, gs.array[2], gs.array[3]);
-
-            //check there is a piece to move from here
-            if (pieceAtSrc == null)
-                return false;
-
-            //check that it is the correct turn of move
-            if ((pieceAtSrc.Player == Player.White && gs.WM == "BLACK") || (pieceAtSrc.Player == Player.Black && gs.WM == "WHITE"))
-                return false;
-
-            // it is invalid if the destination of the move has a piece that is not of the opposite colour
-            if ((IsPieceAtDestinationLocation(gs.array)) && (!IsPieceAtSourceDestinationLocationOppositeColour(gs)))
-                return false;
-
-            //if (!IsClearPath(gs))
-            //    return false;
-
-            if (!IsPieceMovingCorrectly(gs))
-                return false;
-
-            if (IsItAValidCastleMove(gs))
-                return true;
-
-            return true;
-        }
-
-        private bool IsItAValidCastleMove(GameState gs)
-        {
-            throw new NotImplementedException();
-        }
-
-        //////////////////
-        public bool IsClearPath(GameState gs)
-        {
-            bool result = false;
-            var whatPiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
-
-            //any piece moving 1 square doesn't need this check
-            if ((Math.Abs(gs.array[0] - gs.array[2]) <= 1) && (Math.Abs(gs.array[1] - gs.array[3]) <= 1))
-            {
-                result = true;
-            }
-            //knights dont need this check as they jump over
-            if (whatPiece.Type == PieceType.Knight)
-            {
-                result = true;
-            }
-
-            return result;
-        }
-
-        public bool IsPieceMovingCorrectly(GameState gs)
-        {
-            bool result = false;
-            var whatPiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
-            bool pieceAtDst = IsPieceAtDestinationLocation(gs.array);
-            PieceMoveValidations pmv = new PieceMoveValidations();
-
-            switch (whatPiece.Type)
-            {
-                case PieceType.Pawn:
-                    if (whatPiece.Player == Player.White)
-                    {
-                        if (pmv.PieceMovingLikeAWhitePawn(this, pieceAtDst, gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
-                        {
-                            result = true;
-                        }
-                    }
-                    else
-                    {
-                        if (pmv.PieceMovingLikeABlackPawn(this, pieceAtDst, gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
-                        {
-                            result = true;
-                        }
-                    }
-                    break;
-
-                case PieceType.Rook:
-                    if (pmv.PieceMovingLikeARook(gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
-                    {
-                        result = true;
-                    }
-                    break;
-
-                case PieceType.Knight:
-                    if (pmv.PieceMovingLikeAKnight(gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
-                    {
-                        result = true;
-                    }
-                    break;
-
-                case PieceType.Bishop:
-                    if (pmv.PieceMovingLikeABishop(gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
-                    {
-                        result = true;
-                    }
-                    break;
-
-                case PieceType.Queen:
-                    if (pmv.PieceMovingLikeAQueen(gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
-                    {
-                        result = true;
-                    }
-                    break;
-
-                case PieceType.King:
-                    if (pmv.PieceMovingLikeAKing(gs.array[0], gs.array[1], gs.array[2], gs.array[3]))
-                    {
-                        result = true;
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-            return result;
-        }
-
-        public bool IsItYourMove()
-        {
-            var sourcePiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
-            if ((sourcePiece.Player == Player.White && gs.WM == "WHITE") || (sourcePiece.Player == Player.Black && gs.WM == "BLACK"))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public bool IsPieceAtSourceLocation(int[] array)
-        {
-            if (IsPieceAtThisLocation(array[0], array[1]))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public bool IsPieceAtDestinationLocation(int[] array)
-        {
-            if (IsPieceAtThisLocation(array[2], array[3]))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public bool IsPieceAtSourceDestinationLocationOppositeColour(GameState gs)
-        {
-            var sourcePiece = Utility.WhatPieceIsHere(this, gs.array[0], gs.array[1]);
-            var destinationPiece = Utility.WhatPieceIsHere(this, gs.array[2], gs.array[3]);
-
-            if (sourcePiece.Player != destinationPiece.Player)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool IsPieceAtThisLocation(int x, int y)
-        {
-            var whatPiece = Utility.WhatPieceIsHere(this, x, y);
-            if (whatPiece != null)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public void MovePiece(int xsrc, int ysrc, int xdst, int ydst)
-        {
-            //get the piece to move
-            var pieceToMove = Utility.WhatPieceIsHere(this, xsrc, ysrc);
-
-            //take the piece if any in destination and add it to collection of pieces taken
-            var pieceToTake = Utility.WhatPieceIsHere(this, xdst, ydst);  //get the piece to take if any
-            if (pieceToTake != null)                        //if there is a piece here take it
-            {
-                this.Pieces.Remove(pieceToTake);            //remove the piece from board
-                this.piecesTaken.Add(pieceToTake);          //add the piece to the list of taken pieces
-            }
-
-            //move the piece - add and remove from the observable location
-            ChessPiece moveTo = new ChessPiece
-            {
-                Player = pieceToMove.Player,
-                Type = pieceToMove.Type,
-                Pos = new Point(xdst, ydst)     //put the piece here
-            };
-            this.Pieces.Add(moveTo);
-            this.Pieces.Remove(pieceToMove); //remove the piece
-        }
-
-        //test method
-        //test method
-        public void MakeSomeMoves()
-        {
-            _ = this.Pieces.ElementAt(6); //test
-
-            MovePiece(1, 7, 2, 5);  //white knight
-            MovePiece(1, 0, 2, 2);  //black knight
-            MovePiece(4, 4, 2, 2);  //nothing
-            _ = Utility.WhatPieceIsHere(this, 1, 1);
         }
     }
 }
