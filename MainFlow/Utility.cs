@@ -53,6 +53,30 @@ namespace WPFChess.MainFlow
             wmw.Pieces.Remove(pieceToMove); //remove the piece
         }
 
+        public static void MoveCastleWhenCastling(WPFChess.MainWindow wmw, GameState GS)
+        {
+            if (GS.WKCRS)
+            {
+                Utility.MovePiece(wmw, 7, 7, 5, 7); //move castle over to complete the castle move
+                GS.WKCRS = false; //and reset the flag
+            }
+            if (GS.WKCQS)
+            {
+                Utility.MovePiece(wmw, 0, 7, 3, 7); //move castle over to complete the castle move
+                GS.WKCQS = false; //and reset the flag
+            }
+            if (GS.BKCRS)
+            {
+                Utility.MovePiece(wmw, 7, 0, 5, 0); //move castle over to complete the castle move
+                GS.BKCRS = false; //and reset the flag
+            }
+            if (GS.BKCQS)
+            {
+                Utility.MovePiece(wmw, 0, 0, 3, 0); //move castle over to complete the castle move
+                GS.BKCQS = false; //and reset the flag
+            }
+        }
+
         //test method
         public void MakeSomeMoves(WPFChess.MainWindow wmw)
         {

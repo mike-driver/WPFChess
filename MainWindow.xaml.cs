@@ -91,15 +91,6 @@ namespace WPFChess
             MoveListLabel.Content = InputBox.Text;
             GS.move = InputBox.Text;
 
-            if (GS.move.ToLower() == "s1")
-            {
-                Utility.Setup1(this);
-            }
-            if (GS.move.ToLower() == "s2")
-            {
-                Utility.Setup2(this);
-            }
-
             InputBox.Clear();
             InputBox.Focus();
 
@@ -119,6 +110,17 @@ namespace WPFChess
                     }
                     break;
 
+                case 2:
+                    if (GS.move.ToLower() == "s1")
+                    {
+                        Utility.Setup1(this);
+                    }
+                    if (GS.move.ToLower() == "s2")
+                    {
+                        Utility.Setup2(this);
+                    }
+                    break;
+
                 case 4:
                     if (CheckMoveRegExpression.CheckMoveRegEx(GS.move))
                     {
@@ -127,26 +129,8 @@ namespace WPFChess
                         {
                             Utility.SetCastlingFlags(this, GS.array[0], GS.array[1], GS);
                             Utility.MovePiece(this, GS.array[0], GS.array[1], GS.array[2], GS.array[3]);
-                            if (GS.WKCRS)
-                            {
-                                Utility.MovePiece(this, 7, 7, 5, 7); //move castle over to complete the castle move
-                                GS.WKCRS = false; //and reset the flag
-                            }
-                            if (GS.WKCQS)
-                            {
-                                Utility.MovePiece(this, 0, 7, 3, 7); //move castle over to complete the castle move
-                                GS.WKCQS = false; //and reset the flag
-                            }
-                            if (GS.BKCRS)
-                            {
-                                Utility.MovePiece(this, 7, 0, 5, 0); //move castle over to complete the castle move
-                                GS.BKCRS = false; //and reset the flag
-                            }
-                            if (GS.BKCQS)
-                            {
-                                Utility.MovePiece(this, 0, 0, 3, 0); //move castle over to complete the castle move
-                                GS.BKCQS = false; //and reset the flag
-                            }
+                            Utility.MoveCastleWhenCastling(this, GS);
+
                             MOVECOUNT++;
                             WHITESMOVE = (MOVECOUNT % 2 == 0);
                             MoveList.Append(GS.WM + "-" + GS.move + " ");
