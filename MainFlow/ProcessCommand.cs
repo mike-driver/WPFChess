@@ -5,9 +5,9 @@ namespace WPFChess.MainFlow
 {
     public static class FlowControl
     {
-        public static bool ProcessCommand(string move)
+        public static bool ProcessCommand(GameState gs)
         {
-            if (move == "q" || move == "f" || move == "r" || move == "s")
+            if (gs.move == "q" || gs.move == "f" || gs.move == "r" || gs.move == "s")
             {
                 Environment.Exit(0);
                 return true;

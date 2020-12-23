@@ -109,7 +109,7 @@ namespace WPFChess
             switch (GS.move.Length)
             {
                 case 1:
-                    if (FlowControl.ProcessCommand(GS.move))
+                    if (FlowControl.ProcessCommand(GS))
                     {
                         Valid.Content = "Valid command : " + GS.move;
                     }
